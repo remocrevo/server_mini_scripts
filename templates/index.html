@@ -1,0 +1,139 @@
+<!-- templates/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Write Michigan - Join Our Reviewer Team</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/forms-min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<div class="content-wrapper">
+    <div class="content">
+        <img class="pure-img-responsive" src="https://d4804za1f1gw.cloudfront.net/wp-content/uploads/sites/88/2020/09/21092834/Header_logoimage.png" width="1000px" alt="Write Michigan Logo">
+
+        <div class="pure-g">
+            <div class="l-box pure-u-1 pure-u-md-1 pure-u-lg-1">
+                <div id="alert" class="error-message" style="display:none"></div>
+                <div id="confirmation" class="success-message" style="display:none"></div>
+
+                <h3 class="content-subhead">
+                    Join the Write Michigan 2024 Reviewer Team
+                </h3>
+                <p>
+                    1. Submit your email address below.<br>
+                    2. Check your email for a confirmation from Submittable.<br>
+                    3. If you don't have a Submittable account yet, follow the confirmation link to create one.
+                </p>
+            </div>
+        </div>
+
+        <div class="pure-g">
+            <div class="l-box-lrg pure-u-1 pure-u-md-2-5">
+                <form class="pure-form pure-form-stacked" id="reviewerForm">
+                    <fieldset>
+                        <label for="email">Your Email (for your Submittable account)</label>
+                        <input id="email" type="email" placeholder="Email Address" required 
+                               aria-required="true" aria-describedby="emailError">
+                        <div id="emailError" class="error-text" role="alert"></div>
+
+                        <button type="submit" class="pure-button" id="submitButton">
+                            Join Reviewer Team
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showMessage(type, messageText) {
+    const elem = document.getElementById(type);
+    elem.textContent = messageText;
+    elem.style.display = 'block';
+}
+
+function hideMessages() {
+    document.getElementById('alert').style.display = 'none';
+    document.getElementById('confirmation').style.display = 'none';
+}
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function disableForm() {
+    const button = document.getElementById('submitButton');
+    const email = document.getElementById('email');
+    button.disabled = true;
+    email.disabled = true;
+    button.textContent = 'Processing...';
+}
+
+function enableForm() {
+    const button = document.getElementById('submitButton');
+    const email = document.getElementById('email');
+    button.disabled = false;
+    email.disabled = false;
+    button.textContent = 'Join Reviewer Team';
+}
+
+document.getElementById('reviewerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    hideMessages();
+
+    const email = document.getElementById('email').value.trim();
+    const emailError = document.getElementById('emailError');
+    
+    if (!validateEmail(email)) {
+        emailError.textContent = 'Please enter a valid email address';
+        return;
+    }
+    emailError.textContent = '';
+
+    try {
+        disableForm();
+        
+        const response = await fetch('/api/add-team-member', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            if (data.message) {
+                showMessage('confirmation', data.message);
+                if (data.status === 'team_full') {
+                    // Add VolunteerHub link if team is full
+                    const link = document.createElement('a');
+                    link.href = 'http://writemichigan.kdl.volunteerhub.com/';
+                    link.textContent = 'VolunteerHub';
+                    link.target = '_blank';
+                    document.getElementById('confirmation').appendChild(document.createElement('br'));
+                    document.getElementById('confirmation').appendChild(link);
+                }
+            }
+        } else {
+            showMessage('alert', data.error || 'An error occurred. Please try again.');
+        }
+    } catch (error) {
+        showMessage('alert', 'Unable to connect to the server. Please try again later.');
+    } finally {
+        enableForm();
+    }
+});
+</script>
+
+</body>
+</html>
