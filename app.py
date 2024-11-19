@@ -10,6 +10,9 @@ SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 
 app = Flask(__name__)
 
+app.add_url_rule('/favicon.ico',
+                 redirect_to=url_for('static', filename='favicon.ico'))
+
 @app.route('/')
 def home():
     return render_template('index.html')
