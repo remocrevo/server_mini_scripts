@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_from_directory
 import os
 import requests
 from dotenv import load_dotenv
@@ -10,8 +10,11 @@ SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 
 app = Flask(__name__)
 
-app.add_url_rule('/favicon.ico',
-                 redirect_to=url_for('static', filename='favicon.ico'))
+# Add route for favicon
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                             'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/')
 def home():
