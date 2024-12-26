@@ -8,14 +8,13 @@ from datetime import datetime
 submissions_bp = Blueprint('submissions', __name__, url_prefix='/find_reviewed.py')
 
 load_dotenv()
-API_KEY = os.getenv('SUBMITTABLE_API_KEY')
-app = Flask(__name__)
+SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 
 @submissions_bp.route('/')
 def get_submissions(continuation_token=None, size=500):
     url = 'https://submittable-api.submittable.com/v4/submissions'
     headers = {
-        'Authorization': f'Basic {API_KEY}',
+        'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
         'Content-Type': 'application/json'
     }
     params = {
@@ -30,7 +29,7 @@ def get_submissions(continuation_token=None, size=500):
 def get_reviews(submission_id):
     url = f'https://submittable-api.submittable.com/v4/entries/submissions/{submission_id}/reviews'
     headers = {
-        'Authorization': f'Basic {API_KEY}',
+        'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
         'Content-Type': 'application/json'
     }
     
