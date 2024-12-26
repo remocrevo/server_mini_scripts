@@ -1,7 +1,7 @@
-# submission_review/routes.py
-from flask import render_template
+from flask import render_template, jsonify
 import os
-import requests
+import asyncio
+import aiohttp
 from dotenv import load_dotenv
 from datetime import datetime
 from . import submissions_bp
@@ -10,66 +10,76 @@ from . import submissions_bp
 load_dotenv()
 SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 
-def get_submissions(continuation_token=None, size=500):
-    url = 'https://submittable-api.submittable.com/v4/submissions'
-    headers = {
+async def get_session():
+    return aiohttp.ClientSession(headers={
         'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
         'Content-Type': 'application/json'
-    }
+    })
+
+async def get_submissions_page(session, continuation_token=None, size=100):
+    url = 'https://submittable-api.submittable.com/v4/submissions'
     params = {
         'size': size,
         'continuationToken': continuation_token
     }
+    async with session.get(url, params=params) as response:
+        response.raise_for_status()
+        return await response.json()
 
-    response = requests.get(url, headers=headers, params=params)
-    response.raise_for_status()
-    return response.json()
-
-def get_reviews(submission_id):
+async def get_reviews(session, submission_id):
     url = f'https://submittable-api.submittable.com/v4/entries/submissions/{submission_id}/reviews'
-    headers = {
-        'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
-        'Content-Type': 'application/json'
-    }
+    async with session.get(url) as response:
+        response.raise_for_status()
+        return await response.json()
 
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
+async def process_submission_batch(session, submissions):
+    tasks = []
+    for submission in submissions:
+        submission_id = submission.get('submissionId')
+        if submission_id:
+            tasks.append(process_single_submission(session, submission))
+    return await asyncio.gather(*tasks)
 
-def find_submissions_with_two_reviews():
-    submissions_with_two_reviews = []
-    continuation_token = None
+async def process_single_submission(session, submission):
+    submission_id = submission.get('submissionId')
+    reviews = await get_reviews(session, submission_id)
+    completed_reviews = [r for r in reviews if r.get('status') == 'completed']
+    
+    if len(completed_reviews) >= 2:
+        return {
+            'submission_id': submission_id,
+            'title': submission.get('submissionTitle'),
+            'status': submission.get('submissionStatus'),
+            'review_count': len(completed_reviews),
+            'last_review_date': max(r.get('completedAt', '') for r in completed_reviews)
+        }
+    return None
 
-    while True:
-        result = get_submissions(continuation_token)
-
-        for submission in result.get('items', []):
-            submission_id = submission.get('submissionId')
-            if not submission_id:
-                continue
-
-            reviews = get_reviews(submission_id)
-            completed_reviews = [r for r in reviews if r.get('status') == 'completed']
-
-            if len(completed_reviews) >= 2:
-                submissions_with_two_reviews.append({
-                    'submission_id': submission_id,
-                    'title': submission.get('submissionTitle'),
-                    'status': submission.get('submissionStatus'),
-                    'review_count': len(completed_reviews),
-                    'last_review_date': max(r.get('completedAt', '') for r in completed_reviews)
-                })
-
-        continuation_token = result.get('continuationToken')
-        if not continuation_token:
-            break
-
-    return sorted(submissions_with_two_reviews, key=lambda x: x['last_review_date'], reverse=True)
+async def find_submissions_with_two_reviews():
+    async with await get_session() as session:
+        submissions_with_two_reviews = []
+        continuation_token = None
+        
+        while True:
+            result = await get_submissions_page(session, continuation_token)
+            batch_results = await process_submission_batch(session, result.get('items', []))
+            
+            # Filter out None results and add valid submissions
+            valid_submissions = [s for s in batch_results if s is not None]
+            submissions_with_two_reviews.extend(valid_submissions)
+            
+            continuation_token = result.get('continuationToken')
+            if not continuation_token:
+                break
+                
+        return sorted(submissions_with_two_reviews, 
+                     key=lambda x: x['last_review_date'], 
+                     reverse=True)
 
 @submissions_bp.route('/')
-def show_submissions():
+async def show_submissions():
     try:
-        results = find_submissions_with_two_reviews()
+        results = await find_submissions_with_two_reviews()
         return render_template('submission_review/submissions.html', submissions=results)
     except Exception as e:
         return f"Error: {str(e)}", 500
