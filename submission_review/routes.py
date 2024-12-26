@@ -70,6 +70,6 @@ def find_submissions_with_two_reviews():
 def show_submissions():
     try:
         results = find_submissions_with_two_reviews()
-        return render_template('submissions.html', submissions=results)
+        return render_template('submission_review/submissions.html', submissions=results)
     except Exception as e:
         return f"Error: {str(e)}", 500
