@@ -11,7 +11,7 @@ SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 
 @reviewer_bp.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('reviewer_signup/index.html')
 
 @reviewer_bp.route('/api/add-team-member', methods=['POST'])
 def add_team_member():
