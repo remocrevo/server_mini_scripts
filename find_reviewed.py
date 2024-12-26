@@ -1,13 +1,17 @@
-from flask import Flask, render_template
+# submission_review/routes.py
+from flask import Blueprint, render_template
 import os
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
 
+submissions_bp = Blueprint('submissions', __name__, url_prefix='/find_reviewed.py')
+
 load_dotenv()
 API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 app = Flask(__name__)
 
+@submissions_bp.route('/')
 def get_submissions(continuation_token=None, size=500):
     url = 'https://submittable-api.submittable.com/v4/submissions'
     headers = {
