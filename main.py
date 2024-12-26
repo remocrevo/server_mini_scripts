@@ -1,7 +1,7 @@
-# main.py (this is your entry point)
+# main.py
 from flask import Flask
-from reviewer_signup.routes import reviewer_bp
-from submission_review.routes import submissions_bp
+from reviewer_signup import reviewer_bp
+from submission_review import submissions_bp
 
 def create_app():
     app = Flask(__name__)
@@ -12,5 +12,7 @@ def create_app():
     
     return app
 
-# Create the application instance
 app = create_app()
+
+if __name__ == '__main__':
+    app.run()
