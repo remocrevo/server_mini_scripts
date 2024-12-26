@@ -1,26 +1,22 @@
-# app.py
-from flask import Flask, request, render_template, jsonify, send_from_directory
+# reviewer_signup/routes.py
+from flask import Blueprint, render_template, request, jsonify, send_from_directory
 import os
 import requests
 from dotenv import load_dotenv
 
-# Load API key from environment variable
-load_dotenv()
-SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
-
-app = Flask(__name__)
+reviewer_bp = Blueprint('reviewer', __name__, url_prefix='/')
 
 # Add route for favicon
-@app.route('/favicon.ico')
+@reviewer_bp.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
+    return send_from_directory(os.path.join(reviewer_bp.root_path, 'static'),
                              'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-@app.route('/')
+@reviewer_bp.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('reviewer_signup/index.html')
 
-@app.route('/api/add-team-member', methods=['POST'])
+@reviewer_bp.route('/api/add-team-member', methods=['POST'])
 def add_team_member():
     try:
         email = request.json.get('email')
