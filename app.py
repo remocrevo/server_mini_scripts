@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 reviewer_bp = Blueprint('reviewer', __name__, url_prefix='/')
 
+load_dotenv()
+SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
+
 # Add route for favicon
 @reviewer_bp.route('/favicon.ico')
 def favicon():
