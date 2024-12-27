@@ -1,6 +1,7 @@
 from flask import render_template, jsonify
 import os
 import asyncio
+from asyncio import Semaphore, sleep
 import aiohttp
 from dotenv import load_dotenv
 import logging
@@ -15,20 +16,18 @@ load_dotenv()
 SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 TIMEOUT = aiohttp.ClientTimeout(total=60)
 
-async def exponential_backoff(func, *args, retries=5, initial_delay=1, max_delay=32, **kwargs):
-    delay = initial_delay
-    for attempt in range(retries):
+RATE_LIMIT = 10  # Maximum number of requests per second (adjust per API documentation)
+semaphore = Semaphore(RATE_LIMIT)
+
+async def rate_limited_request(task, *args, **kwargs):
+    async with semaphore:
         try:
-            return await func(*args, **kwargs)
-        except aiohttp.ClientResponseError as e:
-            if e.status == 429:
-                logger.warning(f"Rate limit hit (attempt {attempt + 1}/{retries})")
-                await sleep(delay)
-                delay = min(delay * 2, max_delay)
-            else:
-                raise
-    logger.error(f"Max retries reached for {func.__name__}")
-    raise
+            result = await task(*args, **kwargs)
+            await sleep(1 / RATE_LIMIT)  # Introduce delay to adhere to rate limits
+            return result
+        except Exception as e:
+            logger.error(f"Rate-limited request failed: {str(e)}")
+            raise
 
 async def get_session():
     logger.info("Creating new session")
@@ -64,7 +63,7 @@ async def get_submissions_page(session, continuation_token=None, size=50):
             logger.error(f"Error type: {type(e)}")
             return {'items': [], 'continuationToken': None}
 
-    return await exponential_backoff(task)
+    return await rate_limited_request(task)
 
 async def get_reviews(session, submission_id):
     async def task():
@@ -82,7 +81,7 @@ async def get_reviews(session, submission_id):
             logger.error(f"Error getting reviews for submission {submission_id}: {str(e)}")
             return []
 
-    return await exponential_backoff(task)
+    return await rate_limited_request(task)
 
 async def process_submission_batch(session, submissions):
     logger.info(f"Processing batch of {len(submissions)} submissions")
