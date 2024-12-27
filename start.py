@@ -10,4 +10,6 @@ if __name__ == "__main__":
     config.timeout = 300
     config.graceful_timeout = 300
     config.keep_alive_timeout = 300
-    run(app, config)
+    
+    # Pass config as a keyword argument
+    run("main:app", config_path=config)
