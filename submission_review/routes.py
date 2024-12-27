@@ -15,6 +15,21 @@ load_dotenv()
 SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 TIMEOUT = aiohttp.ClientTimeout(total=60)
 
+async def exponential_backoff(func, *args, retries=5, initial_delay=1, max_delay=32, **kwargs):
+    delay = initial_delay
+    for attempt in range(retries):
+        try:
+            return await func(*args, **kwargs)
+        except aiohttp.ClientResponseError as e:
+            if e.status == 429:
+                logger.warning(f"Rate limit hit (attempt {attempt + 1}/{retries})")
+                await sleep(delay)
+                delay = min(delay * 2, max_delay)
+            else:
+                raise
+    logger.error(f"Max retries reached for {func.__name__}")
+    raise
+
 async def get_session():
     logger.info("Creating new session")
     return aiohttp.ClientSession(
@@ -26,50 +41,48 @@ async def get_session():
     )
 
 async def get_submissions_page(session, continuation_token=None, size=50):
-    url = 'https://submittable-api.submittable.com/v4/submissions'
-    # Only include continuationToken in params if it has a value
-    params = {'size': size}
-    if continuation_token is not None:
-        params['continuationToken'] = continuation_token
+    async def task():
+        url = 'https://submittable-api.submittable.com/v4/submissions'
+        params = {'size': size}
+        if continuation_token is not None:
+            params['continuationToken'] = continuation_token
 
-    try:
-        logger.info(f"Fetching submissions page with token: {continuation_token}")
-        async with session.get(url, params=params) as response:
-            if response.status == 401:
-                logger.error("Authentication failed - check your API key")
-                return {'items': [], 'continuationToken': None}
-            
-            response.raise_for_status()
-            data = await response.json()
-            logger.info(f"Received {len(data.get('items', []))} submissions")
-            
-            # Log the first few characters of the response for debugging
-            logger.info(f"Response preview: {str(data)[:200]}")
-            
-            return data
-    except asyncio.TimeoutError:
-        logger.error(f"Timeout getting submissions page with token {continuation_token}")
-        return {'items': [], 'continuationToken': None}
-    except Exception as e:
-        logger.error(f"Error getting submissions page: {str(e)}")
-        logger.error(f"Error type: {type(e)}")
-        return {'items': [], 'continuationToken': None}
+        try:
+            logger.info(f"Fetching submissions page with token: {continuation_token}")
+            async with session.get(url, params=params) as response:
+                if response.status == 401:
+                    logger.error("Authentication failed - check your API key")
+                    return {'items': [], 'continuationToken': None}
+                response.raise_for_status()
+                return await response.json()
+
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout getting submissions page with token {continuation_token}")
+            return {'items': [], 'continuationToken': None}
+        except Exception as e:
+            logger.error(f"Error getting submissions page: {str(e)}")
+            logger.error(f"Error type: {type(e)}")
+            return {'items': [], 'continuationToken': None}
+
+    return await exponential_backoff(task)
 
 async def get_reviews(session, submission_id):
-    url = f'https://submittable-api.submittable.com/v4/entries/submissions/{submission_id}/reviews'
-    try:
-        logger.info(f"Fetching reviews for submission {submission_id}")
-        async with session.get(url) as response:
-            response.raise_for_status()
-            data = await response.json()
-            logger.info(f"Received {len(data)} reviews for submission {submission_id}")
-            return data
-    except asyncio.TimeoutError:
-        logger.error(f"Timeout getting reviews for submission {submission_id}")
-        return []
-    except Exception as e:
-        logger.error(f"Error getting reviews for submission {submission_id}: {str(e)}")
-        return []
+    async def task():
+        url = f'https://submittable-api.submittable.com/v4/entries/submissions/{submission_id}/reviews'
+
+        try:
+            logger.info(f"Fetching reviews for submission {submission_id}")
+            async with session.get(url) as response:
+                response.raise_for_status()
+                return await response.json()
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout getting reviews for submission {submission_id}")
+            return []
+        except Exception as e:
+            logger.error(f"Error getting reviews for submission {submission_id}: {str(e)}")
+            return []
+
+    return await exponential_backoff(task)
 
 async def process_submission_batch(session, submissions):
     logger.info(f"Processing batch of {len(submissions)} submissions")
