@@ -1,7 +1,12 @@
 # main.py
 from flask import Flask
+import os
+from dotenv import load_dotenv
 from reviewer_signup import reviewer_bp
 from submission_review import submissions_bp
+
+# Load environment variables
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
@@ -14,5 +19,6 @@ def create_app():
 
 app = create_app()
 
+port = int(os.getenv("PORT", 8000))
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=11311)
+    app.run(host='0.0.0.0', port=port)
