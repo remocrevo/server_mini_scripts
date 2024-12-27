@@ -16,7 +16,7 @@ load_dotenv()
 SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 TIMEOUT = aiohttp.ClientTimeout(total=60)
 
-RATE_LIMIT = 5  # Maximum number of requests per second (adjust per API documentation)
+RATE_LIMIT = 1  # Maximum number of requests per second (adjust per API documentation)
 semaphore = Semaphore(RATE_LIMIT)
 
 async def rate_limited_request(task, *args, **kwargs):
