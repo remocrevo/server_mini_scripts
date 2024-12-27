@@ -27,22 +27,32 @@ async def get_session():
 
 async def get_submissions_page(session, continuation_token=None, size=50):
     url = 'https://submittable-api.submittable.com/v4/submissions'
-    params = {
-        'size': size,
-        'continuationToken': continuation_token
-    }
+    # Only include continuationToken in params if it has a value
+    params = {'size': size}
+    if continuation_token is not None:
+        params['continuationToken'] = continuation_token
+
     try:
         logger.info(f"Fetching submissions page with token: {continuation_token}")
         async with session.get(url, params=params) as response:
+            if response.status == 401:
+                logger.error("Authentication failed - check your API key")
+                return {'items': [], 'continuationToken': None}
+            
             response.raise_for_status()
             data = await response.json()
             logger.info(f"Received {len(data.get('items', []))} submissions")
+            
+            # Log the first few characters of the response for debugging
+            logger.info(f"Response preview: {str(data)[:200]}")
+            
             return data
     except asyncio.TimeoutError:
         logger.error(f"Timeout getting submissions page with token {continuation_token}")
         return {'items': [], 'continuationToken': None}
     except Exception as e:
         logger.error(f"Error getting submissions page: {str(e)}")
+        logger.error(f"Error type: {type(e)}")
         return {'items': [], 'continuationToken': None}
 
 async def get_reviews(session, submission_id):
