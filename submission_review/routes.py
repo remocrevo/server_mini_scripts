@@ -17,17 +17,19 @@ SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 TIMEOUT = aiohttp.ClientTimeout(total=60)
 
 RATE_LIMIT = 1  # Maximum number of requests per second (adjust per API documentation)
-semaphore = Semaphore(RATE_LIMIT)
 
-async def rate_limited_request(task, *args, **kwargs):
-    async with semaphore:
-        try:
-            result = await task(*args, **kwargs)
-            await sleep(1 / RATE_LIMIT)  # Introduce delay to adhere to rate limits
-            return result
-        except Exception as e:
-            logger.error(f"Rate-limited request failed: {str(e)}")
-            raise
+async def rate_limited_request(task, *args, semaphore=None, **kwargs):
+    if semaphore:
+        async with semaphore:
+            try:
+                result = await task(*args, **kwargs)
+                await sleep(1 / RATE_LIMIT)  # Introduce delay to adhere to rate limits
+                return result
+            except Exception as e:
+                logger.error(f"Rate-limited request failed: {str(e)}")
+                raise
+    else:
+        return await task(*args, **kwargs)
 
 async def get_session():
     logger.info("Creating new session")
@@ -40,6 +42,8 @@ async def get_session():
     )
 
 async def get_submissions_page(session, continuation_token=None, size=50):
+    semaphore = Semaphore(RATE_LIMIT)
+    
     async def task():
         url = 'https://submittable-api.submittable.com/v4/submissions'
         params = {'size': size}
@@ -63,9 +67,11 @@ async def get_submissions_page(session, continuation_token=None, size=50):
             logger.error(f"Error type: {type(e)}")
             return {'items': [], 'continuationToken': None}
 
-    return await rate_limited_request(task)
+    return await rate_limited_request(task, semaphore=semaphore)
 
 async def get_reviews(session, submission_id):
+    semaphore = Semaphore(RATE_LIMIT)
+    
     async def task():
         url = f'https://submittable-api.submittable.com/v4/entries/submissions/{submission_id}/reviews'
 
@@ -81,7 +87,7 @@ async def get_reviews(session, submission_id):
             logger.error(f"Error getting reviews for submission {submission_id}: {str(e)}")
             return []
 
-    return await rate_limited_request(task)
+    return await rate_limited_request(task, semaphore=semaphore)
 
 async def process_submission_batch(session, submissions):
     logger.info(f"Processing batch of {len(submissions)} submissions")
@@ -127,6 +133,8 @@ async def process_single_submission(session, submission):
 
 async def find_submissions_with_two_reviews():
     logger.info("Starting to find submissions with two reviews")
+    semaphore = Semaphore(RATE_LIMIT)
+    
     async with await get_session() as session:
         submissions_with_two_reviews = []
         continuation_token = None
@@ -136,7 +144,7 @@ async def find_submissions_with_two_reviews():
             while True:
                 page_count += 1
                 logger.info(f"Fetching page {page_count}")
-                result = await get_submissions_page(session, continuation_token)
+                result = await rate_limited_request(get_submissions_page, session, continuation_token, semaphore=semaphore)
                 if not result.get('items'):
                     logger.warning("No items received in response")
                     break
