@@ -47,7 +47,7 @@ async def get_submissions_page(session, continuation_token=None, size=50):
     async def task():
         url = 'https://submittable-api.submittable.com/v4/submissions'
         projects = ['64c81590-b089-43f1-bc68-d5011b0321ec', #Write Michigan 2024-25 All Ages
-                    '10c6ce7-054e-4869-a86c-5e19faf49aa6'] #WM 2024-25 NO FEE
+                    'b10c6ce7-054e-4869-a86c-5e19faf49aa6'] #WM 2024-25 NO FEE
         params = {'size': size, 'Projects.Include': projects, 'Statuses.Include': ['completed']}
         if continuation_token is not None:
             params['continuationToken'] = continuation_token
