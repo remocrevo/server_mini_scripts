@@ -79,7 +79,7 @@ def add_team_member():
                     'message': 'This email is already associated with a team member.'
                 })
             
-        return jsonify({'error': 'An unexpected error occurred', 'message': response.json().get('messages') }), 500
+        return jsonify({'error': 'An unexpected error occurred', 'message': response.json() }), 500
 
     except Exception as e:
         return jsonify({'error': 'Server error occurred'}), 500
