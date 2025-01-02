@@ -5,11 +5,14 @@ import requests
 from dotenv import load_dotenv
 from . import reviewer_bp
 import logging
+import base64
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
 load_dotenv()
 SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
+ENCODED_API_KEY = base64.b64encode(f'{SUBMITTABLE_API_KEY}:'.encode()).decode()
 
 @reviewer_bp.route('/')
 def home():
@@ -23,7 +26,7 @@ def add_team_member():
             return jsonify({'error': 'Email is required'}), 400
 
         headers = {
-                'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
+                'Authorization': f'Basic {ENCODED_API_KEY}',
                 'Content-Type': 'application/json'
         }
         json = {
@@ -48,7 +51,7 @@ def add_team_member():
             team_response = requests.get(
                 'https://submittable-api.submittable.com/v4/organizations/team',
                 headers={
-                    'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
+                    'Authorization': f'Basic {ENCODED_API_KEY}',
                     'Content-Type': 'application/json'
                 }
             )
