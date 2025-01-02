@@ -1,6 +1,6 @@
 import requests
 import os
-from flask import Flask, send_file, abort
+from flask import Flask, send_file, abort, request
 from dotenv import load_dotenv
 import io
 from . import bookcover_bp
