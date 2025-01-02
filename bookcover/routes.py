@@ -6,6 +6,7 @@ import io
 import logging
 from requests.exceptions import RequestException
 import sys
+from . import bookcover_bp
 
 # Set up logging
 logging.basicConfig(
@@ -17,8 +18,6 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
-
 class BookCoverError(Exception):
     """Custom exception for book cover retrieval errors"""
     def __init__(self, message, status_code=500):
@@ -26,13 +25,13 @@ class BookCoverError(Exception):
         self.status_code = status_code
         super().__init__(self.message)
 
-@app.errorhandler(BookCoverError)
+@bookcover_bp.errorhandler(BookCoverError)
 def handle_book_cover_error(error):
     response = jsonify({'error': error.message})
     response.status_code = error.status_code
     return response
 
-@app.route('/book-cover', methods=['GET'])
+@bookcover_bp.route('/book-cover', methods=['GET'])
 def get_book_cover():
     try:
         # Check if API key exists
@@ -172,4 +171,4 @@ if __name__ == '__main__':
         logger.error("BIBLIOCOMMONS_API_KEY not found in environment variables")
         sys.exit(1)
         
-    app.run(debug=True)
+    bookcover_bp.run(debug=True)
