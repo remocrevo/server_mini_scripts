@@ -113,7 +113,7 @@ def get_book_cover():
             not data['title'].get('isbns') or 
             not data['title']['isbns']):
             raise BookCoverError(
-                f"No ISBN found for book: {book_title}",
+                f"No ISBN found for book: {book_title}, URL = " + api_url,
                 status_code=404
             )
 
