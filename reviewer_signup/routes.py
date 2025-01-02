@@ -22,18 +22,24 @@ def add_team_member():
         if not email:
             return jsonify({'error': 'Email is required'}), 400
 
-        # Add to team
-        response = requests.post(
-            'https://submittable-api.submittable.com/v4/organizations/team',
-            headers={
+        headers = {
                 'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
                 'Content-Type': 'application/json'
-            },
-            json={
+        }
+        json = {
                 'emails': [email],
                 'permissionLevel': 'Level1',
                 'title': 'WM Reviewer, unassigned'
-            }
+        }
+        
+        logging.debug(f"POST Payload: {json.dumps(json)}")
+        logging.debug(f"Headers: {headers}")
+
+        # Add to team
+        response = requests.post(
+            'https://submittable-api.submittable.com/v4/organizations/team',
+            headers=headers,
+            json=json
         )
         logging.debug(f"Add to team response: {response.status_code}, {response}")
         
