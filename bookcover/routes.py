@@ -109,16 +109,16 @@ def get_book_cover():
             )
 
         # Check if ISBN exists
-        if (not data.get('title') or 
-            not data['title'].get('isbns') or 
-            not data['title']['isbns']):
+        if (not data.get('titles') or 
+            not data['titles'][0].get('isbns') or 
+            not data['titles'][0]['isbns']):
             raise BookCoverError(
                 f"No ISBN found for book: {book_title}, URL = " + api_url,
                 status_code=404
             )
 
         # Get the first ISBN
-        isbn = data['title']['isbns'][0]
+        isbn = data['titles'][0]['isbns'][0]
         
         # Construct image URL
         image_url = f"https://secure.syndetics.com/index.aspx?isbn={isbn}/LC.GIF"
