@@ -3,13 +3,12 @@ import os
 from flask import Flask, send_file, abort
 from dotenv import load_dotenv
 import io
+from . import bookcover_bp
 
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
-
-@app.route('/book-cover', methods=['GET'])
+@bookcover_bp.route('/book-cover', methods=['GET'])
 def get_book_cover():
     # Get the book title from query parameters
     book_title = request.args.get('title')
