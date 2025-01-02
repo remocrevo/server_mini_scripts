@@ -4,6 +4,8 @@ import os
 import requests
 from dotenv import load_dotenv
 from . import reviewer_bp
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Load environment variables
 load_dotenv()
@@ -33,7 +35,8 @@ def add_team_member():
                 'title': 'WM Reviewer, unassigned'
             }
         )
-
+        logging.debug(f"Add to team response: {response.status_code}, {response.text}")
+        
         if response.status_code == 204:
             # Check user status
             team_response = requests.get(
@@ -43,11 +46,17 @@ def add_team_member():
                     'Content-Type': 'application/json'
                 }
             )
+            logging.debug(f"Team status response: {team_response.status_code}, {team_response.text}")
             
             if team_response.status_code == 200:
                 team_data = team_response.json()
                 user_id = None
-                team_size = len(team_data.get('teamMembers', []))
+                team_members = team_data.get('teamMembers', [])
+                if not isinstance(team_members, list):
+                    logging.error("Invalid teamMembers format")
+                    return jsonify({'error': 'Unexpected API response'}), 500
+
+                team_size = len(team_members)
                 
                 for member in team_data.get('teamMembers', []):
                     if member.get('email') == email:
@@ -73,13 +82,15 @@ def add_team_member():
 
         elif response.status_code == 400:
             error_data = response.json()
+            logging.error(f"Error from API: {error_data}")
+
             if error_data.get('messages') and 'already been added to your team' in error_data['messages'][0]:
                 return jsonify({
                     'status': 'already_member',
                     'message': 'This email is already associated with a team member.'
                 })
             
-        return jsonify({'error': 'An unexpected error occurred', 'message': response.json() }), 500
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
     except Exception as e:
         return jsonify({'error': 'Server error occurred'}), 500
