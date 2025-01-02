@@ -46,7 +46,7 @@ def add_team_member():
                     'Content-Type': 'application/json'
                 }
             )
-            logging.debug(f"Team status response: {team_response.status_code}, {team_response.text}")
+            logging.debug(f"Team status response: {team_response.status_code}, {team_response.json()}")
             
             if team_response.status_code == 200:
                 team_data = team_response.json()
