@@ -35,7 +35,7 @@ def add_team_member():
                 'title': 'WM Reviewer, unassigned'
             }
         )
-        logging.debug(f"Add to team response: {response.status_code}, {response.text}")
+        logging.debug(f"Add to team response: {response.status_code}, {response}")
         
         if response.status_code == 204:
             # Check user status
