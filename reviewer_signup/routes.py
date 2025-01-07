@@ -100,5 +100,6 @@ def add_team_member():
             
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
-    except Exception as e:
-        return jsonify({'error': 'Server error occurred'}), 500
+    except requests.exceptions.RequestException as e:
+        logging.exception("Error during API request")
+        return jsonify({'error': 'Failed to add team member', 'details': str(e)}), 500
