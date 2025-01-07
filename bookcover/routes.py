@@ -43,24 +43,29 @@ def get_book_cover():
             )
 
         # Validate book title parameter
-        book_title = request.args.get('title')
-        if not book_title:
+        #book_title = request.args.get('title')
+        book_title_id = request.args.get('title_id')
+        if not book_title_id:
             raise BookCoverError(
-                "Book title is required. Use ?title=<book title> in the URL.",
+                "Book ID is required. Use ?title_id=<ID NUMBER> in the URL.",
                 status_code=400
             )
-        if len(book_title.strip()) < 2:
+        if len(book_title_id.strip()) < 2:
             raise BookCoverError(
-                "Book title must be at least 2 characters long.",
+                "Book ID must be at least 2 characters long.",
                 status_code=400
             )
 
         # Prepare the API URL
-        encoded_title = requests.utils.quote(book_title)
-        api_url = (f"https://api.bibliocommons.com/v1/titles?"
-                  f"library=kdl&search_type=custom&"
-                  f"q=formatcode%3A(BK )%20%20anywhere%3A({encoded_title})&"
-                  f"api_key={api_key}")
+        if book_title_id:
+            api_url = (f"https://api.bibliocommons.com/v1/titles/{book_title_id}?"
+                      f"library=kdl&api_key={api_key}")
+        #else:
+        #    encoded_title = requests.utils.quote(book_title)
+        #    api_url = (f"https://api.bibliocommons.com/v1/titles?"
+        #              f"library=kdl&search_type=custom&"
+        #              f"q=formatcode%3A(BK )%20%20anywhere%3A({encoded_title})&"
+        #              f"api_key={api_key}")
 
         try:
             # Make the API request with timeout
@@ -109,16 +114,16 @@ def get_book_cover():
             )
 
         # Check if ISBN exists
-        if (not data.get('titles') or 
-            not data['titles'][0].get('isbns') or 
-            not data['titles'][0]['isbns']):
+        if (not data.get('title') or 
+            not data['title'].get('isbns') or 
+            not data['title']['isbns']):
             raise BookCoverError(
-                f"No ISBN found for book: {book_title}, URL = " + api_url,
+                f"No ISBN found for book ID: {book_title_id}, URL = " + api_url,
                 status_code=404
             )
 
         # Get the first ISBN
-        isbn = data['titles'][0]['isbns'][0]
+        isbn = data['title']['isbns'][0]
         
         # Construct image URL
         image_url = f"https://secure.syndetics.com/index.aspx?isbn={isbn}/LC.GIF"
