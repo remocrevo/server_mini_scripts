@@ -1,12 +1,12 @@
 from flask import Flask, request, render_template, jsonify
 from c_to_c_functions import *
-from . import address_to_library_card_bp
+from . import address_to_library_card_type_bp
 
-@address_to_library_card_bp.route('/')
+@address_to_library_card_type_bp.route('/')
 def home():
     return render_template('index.html')
 
-@address_to_library_card_bp.route('/get_library_card', methods=['POST'])
+@address_to_library_card_type_bp.route('/get_library_card', methods=['POST'])
 def get_library_card():
     street_address = request.form['street_address']
 
@@ -31,4 +31,4 @@ def get_library_card():
     return jsonify(response)
 
 if __name__ == '__main__':
-    address_to_library_card_bp.run(debug=True)
+    address_to_library_card_type_bp.run(debug=True)
