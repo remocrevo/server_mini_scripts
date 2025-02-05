@@ -2,6 +2,7 @@
 from flask import render_template, request, jsonify
 import os
 import requests
+import json
 from dotenv import load_dotenv
 from . import reviewer_bp
 import logging
