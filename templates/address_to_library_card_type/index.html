@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Street Address to Library Card</title>
+</head>
+<body>
+    <h1>📩 Street Address to Library Card</h1>
+    <form action="/get_library_card" method="post">
+        <label for="street_address">Enter your street address:</label>
+        <input type="text" id="street_address" name="street_address" required>
+        <button type="submit">Enter</button>
+    </form>
+    <hr>
+    <div id="results"></div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('/get_library_card', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            document.getElementById('results').innerHTML = `
+                <p>The address '${formData.get('street_address')}' is located in ${data.full_name} with the coordinates:</p>
+                <p>latitude: ${data.latitude}, longitude: ${data.longitude}</p>
+                <hr>
+                <p>Library Information:</p>
+                <pre>${JSON.stringify(data.results_df, null, 2)}</pre>
+            `;
+        });
+    </script>
+</body>
+</html>
