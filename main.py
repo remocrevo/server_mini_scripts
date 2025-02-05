@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from reviewer_signup import reviewer_bp
 from submission_review import submissions_bp
 from bookcover import bookcover_bp
+from address_to_library_card_type import address_to_library_card_type_bp
 
 # Load environment variables
 load_dotenv()
@@ -16,6 +17,7 @@ def create_app():
     app.register_blueprint(reviewer_bp)
     app.register_blueprint(submissions_bp)
     app.register_blueprint(bookcover_bp)
+    app.register_blueprint(address_to_library_card_type_bp)
     
     return app
 
