@@ -4,7 +4,7 @@ from . import address_to_library_card_type_bp
 
 @address_to_library_card_type_bp.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('address_to_library_card_type/index.html')
 
 @address_to_library_card_type_bp.route('/get_library_card', methods=['POST'])
 def get_library_card():
