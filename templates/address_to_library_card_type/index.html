@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>📩 Street Address to Library Card</h1>
-    <form action="/address_to_library_card_type/get_library_card" method="post">
+    <form>
         <label for="street_address">Enter your street address:</label>
         <input type="text" id="street_address" name="street_address" required>
         <button type="submit">Enter</button>
@@ -19,7 +19,7 @@
         document.querySelector('form').addEventListener('submit', async function(event) {
             event.preventDefault();
             const formData = new FormData(this);
-            const response = await fetch('/get_library_card', {
+            const response = await fetch('/address_to_library_card_type/get_library_card', {
                 method: 'POST',
                 body: formData,
             });
