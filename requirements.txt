@@ -5,6 +5,7 @@ hypercorn==0.15.0
 quart==0.19.4
 requests==2.31.0
 gunicorn==21.2.0
+filelock
 geopy
 pandas
 streamlit
