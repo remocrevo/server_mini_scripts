@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, jsonify
-from c_to_c_functions import *
+from .c_to_c_functions import *
 from . import address_to_library_card_type_bp
 
 @address_to_library_card_type_bp.route('/')

@@ -69,7 +69,7 @@ def list_csubdivisions():
                   'walker city', 'wyoming city']
     
     # Reading in list and dictionary of LLC municpalities and their associated libraries 
-    with open('llc.json', 'r') as f:
+    with open('address_to_library_card_type/llc.json', 'r') as f:
         data = json.load(f)
         llc_townships_list = data['list']
         llc_dict = data['dict']
