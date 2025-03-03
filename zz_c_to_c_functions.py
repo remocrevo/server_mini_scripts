@@ -8,6 +8,7 @@ from datetime import datetime
 import streamlit as st
 from filelock import FileLock, Timeout
 
+
 # Using the geopy library to take a street address as input and return lat and long coordinates
 def get_coordinates(street_address):
     geolocator = Nominatim(user_agent="my_app")
