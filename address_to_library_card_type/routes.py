@@ -26,7 +26,7 @@ def get_library_card():
         'full_name': full_name,
         'latitude': latitude,
         'longitude': longitude,
-        'results_df': results_df.to_dict()  # Convert DataFrame to dictionary for JSON response
+        'results_df': results_df.to_dict(orient='records')  # Convert DataFrame to list of dictionaries for better formatting
     }
     return jsonify(response)
 
