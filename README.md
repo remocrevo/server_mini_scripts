@@ -1,1 +1,1 @@
-# wm_submittable_server
+# server_mini_scripts
