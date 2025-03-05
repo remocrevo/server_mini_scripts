@@ -22,24 +22,16 @@ def get_library_card():
     # Loading in the Address DB, appending the current address results, and then resaves it 
     resave_json(results_df)
 
-    # Extract the results in a simplified format
-    results = results_df.to_dict(orient='records')
+    results = {
+        'full_name': full_name,
+        'latitude': latitude,
+        'longitude': longitude,
+        'results_df': results_df.to_dict(orient='records')  # Convert DataFrame to list of dictionaries for better formatting
+    }
 
-    # Format the result for rendering on the webpage
-    readable_results = []
-    for result in results:
-        readable_results.append({
-            'county_subdivision': result['county_subdivision'],
-            'library_card_type': result['library_card_type'],
-            'street_address': result['street_address'],
-            'time': result['time']
-        })
-
-    return render_template('address_to_library_card_type/results.html', 
-                           full_name=full_name,
-                           latitude=latitude,
-                           longitude=longitude,
-                           results=readable_results)
+    return render_template('address_to_library_card_type/index.html', 
+                           street_address=street_address,
+                           results=results)
 
 if __name__ == '__main__':
     address_to_library_card_type_bp.run(debug=True)
