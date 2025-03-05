@@ -124,38 +124,3 @@ def csubdivision_to_lib_df(county_subdivision, street_address):
 
     return results_df
 
-
-
-# Loading in the Address DB, appending the current address results, and then resaves it 
-save_folder = r"C:\Users\Ryan\Coding Projects\KDL Project\AI PT\Address to card\Address Data"
-file_path = os.path.join(save_folder, 'Address_db.json')
-lock_file_path = file_path + '.lock'
-
-# Ensure the save folder exists
-os.makedirs(save_folder, exist_ok=True)
-
-# Function to save the updated address database
-def resave_json(results_df):
-    new_results = results_df.to_dict(orient='records')
-    lock = FileLock(lock_file_path, timeout=10)
-
-    try:
-        with lock:
-            # Load the address database within the lock context
-            if os.path.exists(file_path):
-                with open(file_path, 'r') as f:
-                    address_db = json.load(f)
-            else:
-                address_db = [] 
-
-            # Append the new entry
-            address_db.extend(new_results)
-
-            # Save the updated address database
-            with open(file_path, 'w') as f:
-                json.dump(address_db, f, indent=4)
-
-            print("Results have been saved to the JSON file.")
-
-    except Timeout:
-        print("Another process is currently accessing the file. Please try again later.")

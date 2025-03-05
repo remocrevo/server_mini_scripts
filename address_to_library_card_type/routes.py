@@ -20,7 +20,7 @@ def get_library_card():
     results_df = csubdivision_to_lib_df(county_subdivision, street_address)
 
     # Loading in the Address DB, appending the current address results, and then resaves it 
-    resave_json(results_df)
+    #resave_json(results_df)
 
     results = {
         'full_name': full_name,
