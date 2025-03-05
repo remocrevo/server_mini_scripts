@@ -99,6 +99,8 @@ def add_team_member():
                     'message': 'This email is already associated with a team member.'
                 })
             
+        error_data = response.json()
+        logging.error(f"Error from API: {error_data}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
     except requests.exceptions.RequestException as e:
