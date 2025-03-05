@@ -13,25 +13,14 @@
         <button type="submit">Enter</button>
     </form>
     <hr>
-    <div id="results"></div>
-
-    <script>
-        document.querySelector('form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const response = await fetch('/address_to_library_card_type/get_library_card', {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await response.json();
-            document.getElementById('results').innerHTML = `
-                <p>The address '${formData.get('street_address')}' is located in ${data.full_name} with the coordinates:</p>
-                <p>latitude: ${data.latitude}, longitude: ${data.longitude}</p>
-                <hr>
-                <p>Library Information:</p>
-                <pre>${JSON.stringify(data.results_df, null, 2)}</pre>
-            `;
-        });
-    </script>
+    {% if results %}
+    <div id="results">
+        <p>The address '{{ street_address }}' is located in {{ results.full_name }} with the coordinates:</p>
+        <p>latitude: {{ results.latitude }}, longitude: {{ results.longitude }}</p>
+        <hr>
+        <p>Library Information:</p>
+        <pre>{{ results.results_df | tojson(indent=2) }}</pre>
+    </div>
+    {% endif %}
 </body>
 </html>
