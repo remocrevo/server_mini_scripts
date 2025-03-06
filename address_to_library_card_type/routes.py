@@ -10,24 +10,32 @@ def home():
 def get_library_card():
     street_address = request.form['street_address']
 
-    # Using the geopy library to take a street address as input and return lat and long coordinates
-    latitude, longitude = get_coordinates(street_address)
+    logging.info(f"Received street address: {street_address}")
 
-    # Function to take latitude and longitude and return tile coordinates (which is what census reporter uses)
-    county_subdivision, full_name = coordinates_to_csubdivision(latitude, longitude)
+    try:
+        # Using the geopy library to take a street address as input and return lat and long coordinates
+        latitude, longitude = get_coordinates(street_address)
+        logging.info(f"Coordinates obtained: latitude={latitude}, longitude={longitude}")
 
-    # Based on the inputted county_subdivision returns what library the patrons should get
-    results_df = csubdivision_to_lib_df(county_subdivision, street_address)
+        # Function to take latitude and longitude and return tile coordinates (which is what census reporter uses)
+        county_subdivision, full_name = coordinates_to_csubdivision(latitude, longitude)
+        logging.info(f"County subdivision: {county_subdivision}, Full name: {full_name}")
 
-    # Loading in the Address DB, appending the current address results, and then resaves it 
-    #resave_json(results_df)
+        # Based on the inputted county_subdivision returns what library the patrons should get
+        results_df = csubdivision_to_lib_df(county_subdivision, street_address)
+        logging.info("Library card type determined successfully")
 
-    results = {
-        'full_name': full_name,
-        'latitude': latitude,
-        'longitude': longitude,
-        'results_df': results_df.to_dict(orient='records')  # Convert DataFrame to list of dictionaries for better formatting
-    }
+        results = {
+            'full_name': full_name,
+            'latitude': latitude,
+            'longitude': longitude,
+            'results_df': results_df.to_dict(orient='records')  # Convert DataFrame to list of dictionaries for better formatting
+        }
+
+        logging.info("Results prepared successfully")
+    except Exception as e:
+        logging.error(f"Error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
 
     return render_template('address_to_library_card_type/index.html', 
                            street_address=street_address,
