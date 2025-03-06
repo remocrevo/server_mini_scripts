@@ -55,7 +55,7 @@ def add_team_member():
                     'Content-Type': 'application/json'
                 }
             )
-            logging.debug(f"Team status response: {team_response.status_code}, {team_response.json()}")
+            logging.debug(f"Team status response: {team_response.status_code}, {team_response.text}")
             
             if team_response.status_code == 200:
                 team_data = team_response.json()
@@ -90,17 +90,19 @@ def add_team_member():
                     })
 
         elif response.status_code == 400:
-            error_data = response.json()
-            logging.error(f"Error from API: {error_data}")
+            try:
+                error_data = response.json()
+                logging.error(f"Error from API: {error_data}")
 
-            if error_data.get('messages') and 'already been added to your team' in error_data['messages'][0]:
-                return jsonify({
-                    'status': 'already_member',
-                    'message': 'This email is already associated with a team member.'
-                })
-            
-        error_data = response.json()
-        logging.error(f"Error from API: {error_data}")
+                if error_data.get('messages') and 'already been added to your team' in error_data['messages'][0]:
+                    return jsonify({
+                        'status': 'already_member',
+                        'message': 'This email is already associated with a team member.'
+                    })
+            except requests.exceptions.JSONDecodeError:
+                logging.error("Failed to decode JSON response")
+
+        logging.error(f"Unexpected response status: {response.status_code}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
     except requests.exceptions.RequestException as e:
