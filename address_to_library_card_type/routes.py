@@ -1,6 +1,10 @@
 from flask import Flask, request, render_template, jsonify
 from .c_to_c_functions import *
 from . import address_to_library_card_type_bp
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 @address_to_library_card_type_bp.route('/')
 def home():
