@@ -1,4 +1,3 @@
-# reviewer_signup/routes.py
 from flask import render_template, request, jsonify
 import os
 import requests
@@ -14,6 +13,9 @@ logging.basicConfig(level=logging.DEBUG)
 load_dotenv()
 SUBMITTABLE_API_KEY = os.getenv('SUBMITTABLE_API_KEY')
 
+# Encode the API key in base64
+encoded_api_key = base64.b64encode(f"{SUBMITTABLE_API_KEY}:".encode()).decode()
+
 @reviewer_bp.route('/')
 def home():
     return render_template('reviewer_signup/index.html')
@@ -26,7 +28,7 @@ def add_team_member():
             return jsonify({'error': 'Email is required'}), 400
 
         headers = {
-                'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
+                'Authorization': f'Basic {encoded_api_key}',
                 'Content-Type': 'application/json'
         }
         payload = {
@@ -44,7 +46,7 @@ def add_team_member():
             headers=headers,
             json=payload
         )
-        logging.debug(f"Add to team response: {response.status_code}, {response}")
+        logging.debug(f"Add to team response: {response.status_code}, {response.text}")
         
         if response.status_code == 204:
             # Check user status
@@ -102,7 +104,7 @@ def add_team_member():
             except requests.exceptions.JSONDecodeError:
                 logging.error("Failed to decode JSON response")
 
-        logging.error(f"Unexpected response status: {response.status_code}")
+        logging.error(f"Unexpected response status: {response.status_code}, {response.text}, {response.headers}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
 
     except requests.exceptions.RequestException as e:

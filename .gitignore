@@ -7,3 +7,4 @@ reviewer_signup/__pycache__/__init__.cpython-312.pyc
 reviewer_signup/__pycache__/routes.cpython-312.pyc
 submission_review/__pycache__/__init__.cpython-312.pyc
 submission_review/__pycache__/routes.cpython-312.pyc
+.env
