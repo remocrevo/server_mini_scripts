@@ -38,7 +38,7 @@ def add_team_member():
         }
         
         logging.debug(f"POST Payload: {json.dumps(payload)}")
-        logging.debug(f"Headers: {headers}")
+        #logging.debug(f"Headers: {headers}")
 
         # Add to team
         response = requests.post(
@@ -46,7 +46,7 @@ def add_team_member():
             headers=headers,
             json=payload
         )
-        logging.debug(f"Add to team response: {response.status_code}, {response.text}")
+        #logging.debug(f"Add to team response: {response.status_code}, {response.text}")
         
         if response.status_code == 204:
             # Check user status
@@ -57,7 +57,7 @@ def add_team_member():
                     'Content-Type': 'application/json'
                 }
             )
-            logging.debug(f"Team status response: {team_response.status_code}, {team_response.text}")
+            #logging.debug(f"Team status response: {team_response.status_code}, {team_response.text}")
             
             if team_response.status_code == 200:
                 team_data = team_response.json()
