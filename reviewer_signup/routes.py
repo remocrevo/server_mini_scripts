@@ -53,7 +53,7 @@ def add_team_member():
             team_response = requests.get(
                 'https://submittable-api.submittable.com/v4/organizations/team',
                 headers={
-                    'Authorization': f'Basic {SUBMITTABLE_API_KEY}',
+                    'Authorization': f'Basic {encoded_api_key}',
                     'Content-Type': 'application/json'
                 }
             )
