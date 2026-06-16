@@ -1,4 +1,4 @@
-from flask import Flask, send_file, abort, request, jsonify
+from flask import Flask, send_file, abort, request, jsonify, make_response
 import requests
 import os
 from dotenv import load_dotenv
@@ -29,10 +29,23 @@ class BookCoverError(Exception):
 def handle_book_cover_error(error):
     response = jsonify({'error': error.message})
     response.status_code = error.status_code
+    response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
-@bookcover_bp.route('/book-cover', methods=['GET'])
+def add_cors_headers(response):
+    """Helper function to add CORS headers to a response"""
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
+@bookcover_bp.route('/book-cover', methods=['GET', 'OPTIONS'])
 def get_book_cover():
+    # Handle preflight requests
+    if request.method == 'OPTIONS':
+        response = make_response()
+        return add_cors_headers(response)
+    
     try:
         # Check if API key exists
         api_key = os.getenv('BIBLIOCOMMONS_API_KEY')
@@ -151,11 +164,13 @@ def get_book_cover():
                 status_code=502
             )
 
-        # Return the image
-        return send_file(
+        # Return the image with CORS headers
+        response = make_response(send_file(
             io.BytesIO(image_response.content),
             mimetype=content_type
-        )
+        ))
+        response.headers['Content-Type'] = content_type
+        return add_cors_headers(response)
 
     except BookCoverError as e:
         # Log the error and re-raise it to be handled by the error handler
